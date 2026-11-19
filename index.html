@@ -84,7 +84,7 @@ h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,7vw,38px);lin
     <ol class="steps">
       <li><b>1</b><span>פותחים קטגוריה ומסמנים ✓ ליד הספקים שלך</span></li>
       <li><b>2</b><span>אפשר לעצור ולחזור אחר כך. הסימונים נשמרים בטלפון</span></li>
-      <li><b>3</b><span>בסוף לוחצים "שליחה לירון" למטה</span></li>
+      <li><b>3</b><span>בסוף לוחצים "שליחה" למטה. אפשר לשלוח שוב אם מסמנים עוד</span></li>
     </ol>
   </header>
 
@@ -110,7 +110,7 @@ h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,7vw,38px);lin
 
 <div class="send">
   <div class="send-in">
-    <a class="btn primary" id="wa" href="#" target="_blank" rel="noopener" aria-disabled="true">שליחה לירון בוואטסאפ</a>
+    <button class="btn primary" id="send" aria-disabled="true">שליחה</button>
     <button class="btn ghost" id="copy">העתקה</button>
   </div>
 </div>
@@ -169,13 +169,32 @@ function message(){
   if (extra) parts.push("", "*ספקים נוספים*", extra);
   return parts.join("\n");
 }
+let sending = false;
 function updateSend(){
+  if (sending) return;
   const n = picked.size, hasExtra = !!$("#extra").value.trim();
-  const a = $("#wa");
-  a.textContent = n ? `שליחה לירון בוואטסאפ (${n})` : "שליחה לירון בוואטסאפ";
-  a.setAttribute("aria-disabled", String(!(n || hasExtra)));
-  a.href = "https://wa.me/?text=" + encodeURIComponent(message());
+  const b = $("#send");
+  b.textContent = n ? `שליחה (${n} ספקים)` : "שליחה";
+  b.setAttribute("aria-disabled", String(!(n || hasExtra)));
 }
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSeZmz96G0JE63PcIivMzbNT7U3eXeonXV-sXRaiegKvJx1VCA/formResponse";
+$("#send").addEventListener("click", async () => {
+  const b = $("#send");
+  if (sending || b.getAttribute("aria-disabled") === "true") return;
+  sending = true; b.textContent = "שולחת…";
+  const body = new URLSearchParams();
+  body.set("entry.312279943", DATA.filter(r => picked.has(r.u)).map(r => `@${r.u} | ${LABEL(r.c)} | ${r.n}`).join("\n") || "-");
+  body.set("entry.2144919062", $("#extra").value.trim() || "-");
+  try {
+    await fetch(FORM, { method: "POST", mode: "no-cors", body });
+    b.textContent = "נשלח ✓ תודה!";
+    toast("הרשימה נשלחה. אפשר להמשיך לסמן ולשלוח שוב");
+  } catch {
+    b.textContent = "השליחה נכשלה";
+    toast("אין חיבור לאינטרנט? נסי שוב, או לחצי העתקה ושלחי בוואטסאפ");
+  }
+  setTimeout(() => { sending = false; updateSend(); }, 4000);
+});
 let tt; function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("on"); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove("on"),1800); }
 
 document.addEventListener("click", e => {
