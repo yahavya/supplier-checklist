@@ -174,7 +174,7 @@ function updateSend(){
   if (sending) return;
   const n = picked.size, hasExtra = !!$("#extra").value.trim();
   const b = $("#send");
-  b.textContent = n ? `שליחה (${n} ספקים)` : "שליחה";
+  b.textContent = n === 1 ? "שליחה (ספק אחד)" : n ? `שליחה (${n} ספקים)` : "שליחה";
   b.setAttribute("aria-disabled", String(!(n || hasExtra)));
 }
 const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSeZmz96G0JE63PcIivMzbNT7U3eXeonXV-sXRaiegKvJx1VCA/formResponse";
